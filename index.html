@@ -188,14 +188,35 @@
         
         footer { padding-bottom: 4rem; text-align: center; }
         footer p { font-size: 0.875rem; color: var(--muted); }
-        .heart { color: var(--accent); }
+        .heart { color: var(--accent); display: inline-flex; align-items: center; vertical-align: middle; animation: heartbeat 1.5s ease-in-out infinite; }
+        .heart svg { width: 1rem; height: 1rem; }
+        @keyframes heartbeat { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.2); } }
         .copy { font-size: 0.75rem; color: #475569; margin-top: 0.5rem; }
         
         .reveal { opacity: 0; transform: translateY(30px); transition: 0.6s ease-out; }
         .reveal.active { opacity: 1; transform: translateY(0); }
+
+        /* Typing cursor */
+        .title::after { content: '|'; animation: blink 1s infinite; color: var(--accent); }
+        @keyframes blink { 0%, 50% { opacity: 1; } 51%, 100% { opacity: 0; } }
+
+        /* Loading screen */
+        .loader { position: fixed; inset: 0; background: var(--bg); display: flex; align-items: center; justify-content: center; z-index: 9999; transition: opacity 0.5s, visibility 0.5s; }
+        .loader.hidden { opacity: 0; visibility: hidden; }
+        .loader-content { text-align: center; }
+        .loader-spinner { width: 50px; height: 50px; border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 1rem; }
+        .loader-text { color: var(--accent); font-size: 0.875rem; letter-spacing: 0.1em; }
     </style>
 </head>
 <body>
+    <!-- Loading Screen -->
+    <div class="loader" id="loader">
+        <div class="loader-content">
+            <div class="loader-spinner"></div>
+            <p class="loader-text">Loading...</p>
+        </div>
+    </div>
+
     <div class="spotlight" id="spot"></div>
     <div class="shapes"><div class="shape s1"></div><div class="shape s2"></div><div class="shape s3"></div></div>
 
@@ -371,7 +392,7 @@
                             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
                             Say Hello
                         </a>
-                        <a href="#" class="btn btn-secondary">
+                        <a href="Hoang-Thanh-Son-English.pdf" download class="btn btn-secondary">
                             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                             Download CV
                         </a>
@@ -385,12 +406,19 @@
             </section>
 
             <footer>
-                <p>Designed & Built with <span class="heart"></span> by Son Hoang</p>
+                <p>Designed & Built with <span class="heart"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg></span> by Son Hoang</p>
             </footer>
         </main>
     </div>
 
     <script>
+        // Hide loader when page is fully loaded
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                document.getElementById('loader').classList.add('hidden');
+            }, 500);
+        });
+
         document.addEventListener('mousemove', e => {
             document.getElementById('spot').style.setProperty('--mx', e.clientX + 'px');
             document.getElementById('spot').style.setProperty('--my', e.clientY + 'px');
@@ -421,6 +449,99 @@
                 document.querySelector(a.getAttribute('href'))?.scrollIntoView({ behavior: 'smooth' });
             });
         });
-    </script>
+
+        // Typing effect for title
+        const titleElement = document.querySelector('.title');
+        const titles = ['Software Engineer', 'Full Stack Developer', 'UI/UX Enthusiast', 'Problem Solver'];
+        let titleIndex = 0;
+        let charIndex = 0;
+        let isDeleting = false;
+        let typingSpeed = 100;
+
+        function typeEffect() {
+            const currentTitle = titles[titleIndex];
+
+            if (isDeleting) {
+                titleElement.textContent = currentTitle.substring(0, charIndex - 1);
+                charIndex--;
+                typingSpeed = 50;
+            } else {
+                titleElement.textContent = currentTitle.substring(0, charIndex + 1);
+                charIndex++;
+                typingSpeed = 100;
+            }
+
+            if (!isDeleting && charIndex === currentTitle.length) {
+                isDeleting = true;
+                typingSpeed = 2000; // Pause before deleting
+            } else if (isDeleting && charIndex === 0) {
+                isDeleting = false;
+                titleIndex = (titleIndex + 1) % titles.length;
+                typingSpeed = 500; // Pause before typing new title
+            }
+
+            setTimeout(typeEffect, typingSpeed);
+        }
+        setTimeout(typeEffect, 1000);
+
+        // Counter animation for stats
+        const animateCounter = (element, target, suffix = '') => {
+            const duration = 2000;
+            const start = 0;
+            const increment = target / (duration / 16);
+            let current = start;
+
+            const updateCounter = () => {
+                current += increment;
+                if (current < target) {
+                    element.textContent = Math.floor(current) + suffix;
+                    requestAnimationFrame(updateCounter);
+                } else {
+                    element.textContent = target + suffix;
+                }
+            };
+            updateCounter();
+        };
+
+        const statsObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const statNums = entry.target.querySelectorAll('.stat-num');
+                    statNums.forEach(stat => {
+                        const text = stat.textContent;
+                        if (text === '∞') return;
+                        const num = parseInt(text);
+                        const suffix = text.includes('+') ? '+' : '';
+                        stat.textContent = '0' + suffix;
+                        animateCounter(stat, num, suffix);
+                    });
+                    statsObserver.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.5 });
+
+        const statsSection = document.querySelector('.stats');
+        if (statsSection) statsObserver.observe(statsSection);
+
+        // Skill tags hover ripple effect
+        document.querySelectorAll('.skill-tag, .tag, .proj-tag').forEach(tag => {
+            tag.addEventListener('mouseenter', function(e) {
+                this.style.transform = 'translateY(-2px) scale(1.05)';
+            });
+            tag.addEventListener('mouseleave', function() {
+                this.style.transform = '';
+            });
+        });
+
+        // Parallax effect for background shapes
+        window.addEventListener('scroll', () => {
+            const scrolled = window.pageYOffset;
+            document.querySelectorAll('.shape').forEach((shape, index) => {
+                const speed = (index + 1) * 0.1;
+                shape.style.transform = `translateY(${scrolled * speed}px)`;
+            });
+        });
+
+            </script>
 </body>
 </html>
